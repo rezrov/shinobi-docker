@@ -2,9 +2,10 @@
 
 # Make sure the database is online and configured for Shinobi
 check_db() {
-    mysql --host=mariadb -u root -ppasswordo -e "use ccio;"
+    mysql --host=mariadb -u root -ppassword -e "use ccio;"
 }
 
+# TODO
 check_procs() {
     return 0;
 }
@@ -32,8 +33,9 @@ fi
 
 # Check for first-run
 if [ ! -f ~/INITIALIZED ]; then
-    mysql --host=mariadb -u root -ppasswordo -e "source Shinobi/sql/user.sql"
-    mysql --host=mariadb -u root -ppasswordo -e "source Shinobi/sql/framework.sql"
+    mysql -u root -p password --host mariadb -e "CREATE USER 'majesticflame'@'%' IDENTIFIED BY ''" 
+    mysql -u root -p password --host mariadb -e "GRANT ALL PRIVILEGES ON ccio.* TO 'majesticflame'@'%'"
+    mysql --host=mariadb -u root -ppassword -e "source sql/framework.sql"
     check_db;
     if [ $? -eq 0 ]; then
         touch ~/INITIALIZED;
@@ -44,5 +46,5 @@ if [ ! -f ~/INITIALIZED ]; then
 fi
 
 # Called with no parameters, regular startup
-node Shinobi/cron.js &
-node Shinobi/camera.js
+node cron.js &
+node camera.js

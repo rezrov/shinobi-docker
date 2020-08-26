@@ -11,10 +11,10 @@ ENV DBPASS dbpasswd
 
 EXPOSE 8080/tcp
 
-CMD ["/bin/bash"]
+CMD ["/bin/bash", "-c", "/home/$USERNAME/entry.sh"]
 
 #TODO
-HEALTHCHECK CMD ["/bin/bash", "-c", "entry.sh health"]
+HEALTHCHECK CMD ["/bin/bash", "-c", "/home/$USERNAME/entry.sh health"]
 
 SHELL ["/bin/bash", "-c"]
 
@@ -24,10 +24,7 @@ WORKDIR /root
 # Get node.js from the source
 COPY nodesource.gpg.key /root/
 
-# TODO: Remove before publishing
-RUN echo 'Acquire::HTTP::Proxy "http://172.17.0.1:33142";' >> /etc/apt/apt.conf.d/01proxy && \
-    echo 'Acquire::HTTPS::Proxy "false";' >> /etc/apt/apt.conf.d/01proxy && \
-    groupadd -g $PGID $USERNAME && \
+RUN groupadd -g $PGID $USERNAME && \
     useradd -m -u $PUID -g $USERNAME -G users -s /bin/bash $USERNAME && \
     apt-get update && \
     apt-get install -y apt-utils && \
@@ -44,17 +41,20 @@ RUN echo 'Acquire::HTTP::Proxy "http://172.17.0.1:33142";' >> /etc/apt/apt.conf.
 
 # Switch to non-root user and fetch the Shinobi repo, master branch
 USER $USERNAME
+
+COPY entry.sh /home/$USERNAME
+
+# TODO: Remove before publishing
+
 RUN cd /home/$USERNAME && \
     git clone --depth 1 https://gitlab.com/Shinobi-Systems/Shinobi.git --branch master --single-branch Shinobi && \
     cd /home/$USERNAME/Shinobi && \
     npm install --unsafe-perm && \
-    npm audit fix --force && \
     cp conf.sample.json conf.json && \
-    node tools/modifyConfiguration.js addToConfig="{\"db\":{\"host\":\"$DBHOST\"}}" \
-    node tools/modifyConfiguration.js addToConfig="{\"db\":{\"key\":\"$DBPASS\"}}" \
-    node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(uuidgen)\"}}" \     
+    node tools/modifyConfiguration.js addToConfig="{\"db\":{\"host\":\"$DBHOST\"}}" && \
+    node tools/modifyConfiguration.js addToConfig="{\"db\":{\"key\":\"$DBPASS\"}}" && \
+    node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(uuidgen)\"}}" && \     
     cp super.sample.json super.json && \
-    touch INSTALL/installed.txt && \
     npm cache clean --force
 
-WORKDIR /home/$USERNAME
+WORKDIR /home/$USERNAME/Shinobi
