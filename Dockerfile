@@ -2,19 +2,15 @@ FROM debian:buster
 
 LABEL maintainer="fritz@iron.blue" version="1.0" description="Docker container for Shinobi (https://shinobi.video)" 
 
-ENV USERNAME shinobi
 ENV PUID 1001
 ENV PGID 1001
-ENV DBHOST mariadb
-ENV DBUSER root
-ENV DBPASS dbpasswd
 
 EXPOSE 8080/tcp
 
-CMD ["/bin/bash", "-c", "/home/$USERNAME/entry.sh"]
+CMD ["/bin/bash", "-c", "/home/shinobi/entry.sh"]
 
 #TODO
-HEALTHCHECK CMD ["/bin/bash", "-c", "/home/$USERNAME/entry.sh health"]
+HEALTHCHECK CMD ["/bin/bash", "-c", "/home/shinobi/entry.sh health"]
 
 SHELL ["/bin/bash", "-c"]
 
@@ -24,8 +20,8 @@ WORKDIR /root
 # Get node.js from the source
 COPY nodesource.gpg.key /root/
 
-RUN groupadd -g $PGID $USERNAME && \
-    useradd -m -u $PUID -g $USERNAME -G users -s /bin/bash $USERNAME && \
+RUN groupadd -g $PGID shinobi && \
+    useradd -m -u $PUID -g shinobi -G users -s /bin/bash shinobi && \
     apt-get update && \
     apt-get install -y apt-utils && \
     apt-get install -y apt-transport-https lsb-release gnupg util-linux curl && \
@@ -34,27 +30,22 @@ RUN groupadd -g $PGID $USERNAME && \
     echo 'deb-src https://deb.nodesource.com/node_12.x buster main' >> /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y nodejs uuid-runtime build-essential git ffmpeg mariadb-client && \
+    apt-get install -y nodejs jq uuid-runtime build-essential git ffmpeg mariadb-client procps && \
     npm i npm -g && \
     rm -rf /var/lib/apt/lists/* && \
     npm cache clean --force
 
 # Switch to non-root user and fetch the Shinobi repo, master branch
-USER $USERNAME
+USER shinobi
 
-COPY entry.sh /home/$USERNAME
+COPY entry.sh /home/shinobi
 
 # TODO: Remove before publishing
 
-RUN cd /home/$USERNAME && \
+RUN cd /home/shinobi && \
     git clone --depth 1 https://gitlab.com/Shinobi-Systems/Shinobi.git --branch master --single-branch Shinobi && \
-    cd /home/$USERNAME/Shinobi && \
+    cd /home/shinobi/Shinobi && \
     npm install --unsafe-perm && \
-    cp conf.sample.json conf.json && \
-    node tools/modifyConfiguration.js addToConfig="{\"db\":{\"host\":\"$DBHOST\"}}" && \
-    node tools/modifyConfiguration.js addToConfig="{\"db\":{\"key\":\"$DBPASS\"}}" && \
-    node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(uuidgen)\"}}" && \     
-    cp super.sample.json super.json && \
     npm cache clean --force
 
-WORKDIR /home/$USERNAME/Shinobi
+WORKDIR /home/shinobi/Shinobi
