@@ -19,7 +19,5 @@ When the initialize command is run, the admin user and password will be displaye
 ## TODO
 * Too big! Trim down the image. Some ideas:
   * Compile ffmpeg with only the necessary libraries enabled
-* Improve health checking
-  * Verify status of processes instead of just counting them
 * Install process should detect if the db is already initialized
 * Upgrade procedure should be implemented to retain configuration

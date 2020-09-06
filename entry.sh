@@ -10,11 +10,22 @@ check_db() {
 
 # TODO
 check_procs() {
-    node_count=`ps --no-heading -C node | wc -l`
-    if [ $node_count -eq 2 ]; then
-        return 0;
-    fi
-    return 1;    
+
+    for proc_name in cron.js camera.js
+    do
+        proc_id=`pgrep -f "node.+($proc_name)"`
+        if [ "$proc_id" == "" ]; then
+            echo "Process $proc_name is not running" 1>&2
+            return 1
+        fi
+        proc_status=`ps -o state --no-headers $proc_id`
+        if [[ $proc_status != [DRS] ]]; then
+            echo "Process $proc_name is broken (status $proc_status)" 1>&2
+            return 1
+        fi
+    done
+
+    return 0
 }
 
 get_db_params() {
