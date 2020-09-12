@@ -9,7 +9,6 @@ EXPOSE 8080/tcp
 
 CMD ["/bin/bash", "-c", "/home/shinobi/entry.sh"]
 
-#TODO
 HEALTHCHECK CMD ["/bin/bash", "-c", "/home/shinobi/entry.sh health"]
 
 SHELL ["/bin/bash", "-c"]
@@ -30,7 +29,7 @@ RUN groupadd -g $PGID shinobi && \
     echo 'deb-src https://deb.nodesource.com/node_12.x buster main' >> /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y nodejs jq uuid-runtime build-essential git ffmpeg mariadb-client procps && \
+    apt-get install -y nodejs jq build-essential git ffmpeg mariadb-client procps && \
     npm i npm -g && \
     rm -rf /var/lib/apt/lists/* && \
     npm cache clean --force
@@ -39,8 +38,6 @@ RUN groupadd -g $PGID shinobi && \
 USER shinobi
 
 COPY entry.sh /home/shinobi
-
-# TODO: Remove before publishing
 
 RUN cd /home/shinobi && \
     git clone --depth 1 https://gitlab.com/Shinobi-Systems/Shinobi.git --branch master --single-branch Shinobi && \

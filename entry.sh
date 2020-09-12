@@ -2,6 +2,16 @@
 
 cd /home/shinobi/Shinobi
 
+# Generate a password $1 characters long (up to 999)
+gen_pw() {
+    
+    pw_len=$1
+    
+    [[ $pw_len =~ ^[0-9]{1,3}$ ]] || pw_len=20
+
+    PW=$(< /dev/urandom tr -dc 2-9a-hjkmnp-zA-HJKMNP-Z | head -c $pw_len)
+}
+
 # Make sure the database is online and configured for Shinobi
 check_db() {
     get_db_params && \
@@ -63,15 +73,15 @@ fi
 # Check for first-run
 if [ "$1" == "initialize" ]; then
 
-    USERPASS=`uuidgen`
-    ROOTPASS=`uuidgen`
+    gen_pw; USERPASS=$PW
+    gen_pw; ROOTPASS=$PW
 
     mysql -u root -pdbpasswd --host db -e "SET PASSWORD FOR 'root'@'%' = PASSWORD('$ROOTPASS');"
     mysql -u root -p$ROOTPASS --host db -e "CREATE USER 'majesticflame'@'%' IDENTIFIED BY '$USERPASS'" 
     mysql -u root -p$ROOTPASS --host db -e "GRANT ALL PRIVILEGES ON ccio.* TO 'majesticflame'@'%'"
     mysql -u root -p$ROOTPASS --host db -e "source sql/framework.sql"
 
-    admin_pw=`uuidgen`
+    gen_pw; admin_pw=$PW
     cat <<EOF > super.json
 [
   {
@@ -84,7 +94,8 @@ EOF
     node tools/modifyConfiguration.js addToConfig="{\"db\":{\"host\":\"db\"}}" > /dev/null 2>&1
     node tools/modifyConfiguration.js addToConfig="{\"db\":{\"key\":\"$ROOTPASS\"}}" > /dev/null 2>&1
     node tools/modifyConfiguration.js addToConfig="{\"db\":{\"password\":\"$USERPASS\"}}" > /dev/null 2>&1
-    node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(uuidgen)\"}}" > /dev/null 2>&1
+    pw_gen; cron_key=$PW
+    node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$cron_key\"}}" > /dev/null 2>&1
 
     check_db;
     
@@ -101,6 +112,13 @@ EOF
         exit 1;
     fi
     
+fi
+
+# Generate a random password
+if [ "$1" == "password" ]; then
+    gen_pw $2
+    echo $PW
+    exit 0;
 fi
 
 # Called with something unrecognizable
