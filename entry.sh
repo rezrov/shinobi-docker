@@ -94,7 +94,7 @@ EOF
     node tools/modifyConfiguration.js addToConfig="{\"db\":{\"host\":\"db\"}}" > /dev/null 2>&1
     node tools/modifyConfiguration.js addToConfig="{\"db\":{\"key\":\"$ROOTPASS\"}}" > /dev/null 2>&1
     node tools/modifyConfiguration.js addToConfig="{\"db\":{\"password\":\"$USERPASS\"}}" > /dev/null 2>&1
-    pw_gen; cron_key=$PW
+    gen_pw; cron_key=$PW
     node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$cron_key\"}}" > /dev/null 2>&1
 
     check_db;

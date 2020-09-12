@@ -18,6 +18,6 @@ When the initialize command is run, the admin user and password will be displaye
 
 ## TODO
 * Too big! Trim down the image. Some ideas:
-  * Compile ffmpeg with only the necessary libraries enabled
+  * Compile static ffmpeg with only the necessary libraries enabled (debian ffmpeg adds almost 300MB)
 * Install process should detect if the db is already initialized
 * Upgrade procedure should be implemented to retain configuration
